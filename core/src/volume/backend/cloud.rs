@@ -326,6 +326,7 @@ impl VolumeBackend for CloudBackend {
 			};
 
 			entries.push(RawDirEntry {
+				live_object: None,
 				name,
 				kind,
 				size: metadata.content_length(),
@@ -375,6 +376,7 @@ impl VolumeBackend for CloudBackend {
 			modified,
 			created: None, // Most cloud services don't provide creation time
 			accessed: None,
+			live_object: None,
 			inode: None,       // Cloud storage doesn't have inodes
 			permissions: None, // Cloud backends don't have Unix permissions
 			uid: None,

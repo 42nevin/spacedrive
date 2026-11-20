@@ -625,6 +625,7 @@ mod tests {
 				modified: None,
 				accessed: None,
 				created: None,
+				live_object: None,
 				inode: None,
 				permissions: None,
 				uid: None,

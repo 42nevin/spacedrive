@@ -208,6 +208,7 @@ fn write(
 		mtime,
 		created: None,
 		accessed: None,
+		live_object: None,
 		inode: None,
 		mode: Some(0o644),
 		uid: None,

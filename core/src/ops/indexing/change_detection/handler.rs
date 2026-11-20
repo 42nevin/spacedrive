@@ -142,6 +142,7 @@ pub async fn should_filter_path(
 	} else {
 		let fs_meta = tokio::fs::symlink_metadata(path).await?;
 		crate::volume::backend::RawMetadata {
+			live_object: None,
 			kind: if fs_meta.is_dir() {
 				EntryKind::Directory
 			} else if fs_meta.is_symlink() {
@@ -218,6 +219,7 @@ pub async fn build_dir_entry(
 		modified: meta.modified,
 		created: meta.created,
 		accessed: meta.accessed,
+		live_object: meta.live_object,
 		inode: meta.inode,
 		permissions: meta.permissions,
 		uid: meta.uid,

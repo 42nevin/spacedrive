@@ -109,6 +109,7 @@ mod tests {
 			),
 			accessed: None,
 			created: Some(std::time::UNIX_EPOCH),
+			live_object: None,
 			inode: None,
 			permissions: None,
 			uid: None,

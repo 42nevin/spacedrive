@@ -21,6 +21,10 @@ operations across local files, remote nodes, drives, and optional clouds.
 Reliability, lightweight distribution, extensibility, and user ownership decide
 scope.
 
+## Local experiment: cold APFS move (2026-11-20)
+
+This isolated branch tests a fix against upstream `36e2e93e`; it is not an upstream release. In the unmodified nightly, a Finder move of a cold, single-link regular file into an indexed child directory split into a removal and creation and lost its record UUID. Two unchanged client memberships remained unresolved after a source rewalk and after restart. The experimental daemon used a live source-ledger witness and APFS object-to-path lookup before applying the removal. Both memberships resolved the original object without a rewalk, stayed on it when Finder copied identical bytes back to the old name, and still resolved it after restarting the daemon on the same data. This measures a move during a live session followed by restart, not recovery of moves while offline, cross-volume moves, or atomic replacement saves.
+
 ## Current focus
 
 NAS operating state (its datasets, deploys, backups and evidence) is

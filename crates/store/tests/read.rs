@@ -33,6 +33,7 @@ fn observe(path: &str, kind: FileKind, size: i64, hidden: bool) -> Observation {
 		mtime: 1_700_000_000_000,
 		created: Some(1_600_000_000_000),
 		accessed: None,
+		live_object: None,
 		inode: None,
 		mode: Some(0o644),
 		uid: None,

@@ -64,8 +64,8 @@ pub use file::{
 	clear_content_errors, content_of, copies_of_content, count_files_needing_content,
 	count_files_needing_verification, duplicate_copies, files_needing_content,
 	files_needing_verification, filesystem_schema, mark_content_unreadable,
-	name_content_kind_by_extension, ContentCopy, FileKind, FileWrite, Ledger, Observation,
-	PendingContent, PendingVerification, Resolution, SubtreeRename, Watermark,
+	name_content_kind_by_extension, ContentCopy, FileKind, FileWrite, Ledger, LiveObject,
+	Observation, PendingContent, PendingVerification, Resolution, SubtreeRename, Watermark,
 };
 pub use image::{
 	count_files_needing_image_facets, files_needing_image_facets, set_image_facets, ImageFacet,

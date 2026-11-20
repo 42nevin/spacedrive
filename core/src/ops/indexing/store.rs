@@ -50,6 +50,12 @@ const IMAGE_KIND: i64 = crate::domain::ContentKind::Image as i64;
 
 /// What the arena tells the store it saw.
 enum Ingest {
+	#[cfg(target_os = "macos")]
+	LookupLive {
+		path: String,
+		arrival: Option<u64>,
+		reply: oneshot::Sender<Option<(String, sd_store::LiveObject)>>,
+	},
 	/// Paths the walk or the watcher found. The reply carries the record uuid
 	/// each one resolved to, which is the identity the arena then writes.
 	Observe {
@@ -297,6 +303,25 @@ impl SourceStore {
 	/// The absolute root the store's relative paths resolve against.
 	pub fn root(&self) -> &Path {
 		&self.root
+	}
+
+	#[cfg(target_os = "macos")]
+	pub(super) async fn live_binding(
+		&self,
+		path: &Path,
+		arrival: Option<u64>,
+	) -> Result<Option<(PathBuf, sd_store::LiveObject)>> {
+		let Some(path) = self.external_id(path) else {
+			return Ok(None);
+		};
+		let (reply, rx) = oneshot::channel();
+		self.send(Ingest::LookupLive {
+			path,
+			arrival,
+			reply,
+		})
+		.await;
+		Ok(rx.await?.map(|(key, stamp)| (self.root.join(key), stamp)))
 	}
 
 	/// The store, for readers. Writers go through the queue.
@@ -766,6 +791,7 @@ impl SourceStore {
 			mtime: metadata.modified.map(unix_millis).unwrap_or(0),
 			created: metadata.created.map(unix_millis),
 			accessed: metadata.accessed.map(unix_millis),
+			live_object: metadata.live_object,
 			inode: metadata.inode.map(|i| i as i64),
 			mode: metadata.permissions.map(|p| p as i64),
 			uid: metadata.uid.map(|u| u as i64),
@@ -848,6 +874,7 @@ fn ensure_ancestors(ledger: &mut Ledger, external_id: &str, writes: &mut Vec<Fil
 			mtime: 0,
 			created: None,
 			accessed: None,
+			live_object: None,
 			inode: None,
 			mode: None,
 			uid: None,
@@ -932,6 +959,14 @@ async fn write_loop(
 		};
 
 		match ingest {
+			#[cfg(target_os = "macos")]
+			Ingest::LookupLive {
+				path,
+				arrival,
+				reply,
+			} => {
+				let _ = reply.send(ledger.live_binding(&path, arrival));
+			}
 			Ingest::Observe {
 				observations,
 				identities,
@@ -1408,6 +1443,7 @@ COALESCE(own.path, parent.path || '/' || r.title, r.title)
 			modified: metadata.modified().ok(),
 			created: metadata.created().ok(),
 			accessed: metadata.accessed().ok(),
+			live_object: None,
 			inode: Some(hasher.finish()),
 			permissions,
 			uid: None,

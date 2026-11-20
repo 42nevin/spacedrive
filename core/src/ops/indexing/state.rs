@@ -81,6 +81,8 @@ pub struct DirEntry {
 	/// pass that would find it gone.
 	pub created: Option<std::time::SystemTime>,
 	pub accessed: Option<std::time::SystemTime>,
+	#[serde(skip)]
+	pub live_object: Option<sd_store::LiveObject>,
 	pub inode: Option<u64>,
 	/// Unix permission bits.
 	pub permissions: Option<u32>,

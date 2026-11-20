@@ -733,6 +733,7 @@ async fn read_directory_with_backend(
 				modified: raw.modified,
 				created: raw.created,
 				accessed: raw.accessed,
+				live_object: raw.live_object,
 				inode: raw.inode,
 				permissions: raw.permissions,
 				uid: raw.uid,

@@ -95,6 +95,40 @@ impl FileKind {
 	}
 }
 
+/// Corroboration for an object on a live local mount. Never restore this
+/// witness from portable catalog metadata or a saved job.
+#[cfg(target_os = "macos")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LiveObject {
+	pub device: u64,
+	pub inode: u64,
+	pub birth: std::time::SystemTime,
+}
+
+// A platform without this witness pays no per-record storage for it.
+#[cfg(not(target_os = "macos"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LiveObject {}
+
+impl LiveObject {
+	#[cfg(target_os = "macos")]
+	pub fn from_metadata(m: &std::fs::Metadata) -> Option<Self> {
+		use std::os::unix::fs::MetadataExt;
+		if !m.is_file() || m.nlink() != 1 {
+			return None;
+		}
+		Some(Self {
+			device: m.dev(),
+			inode: m.ino(),
+			birth: m.created().ok()?,
+		})
+	}
+	#[cfg(not(target_os = "macos"))]
+	pub fn from_metadata(_: &std::fs::Metadata) -> Option<Self> {
+		None
+	}
+}
+
 /// One thing the walk or the watcher saw, before it has an identity.
 #[derive(Debug, Clone)]
 pub struct Observation {
@@ -109,6 +143,7 @@ pub struct Observation {
 	pub mtime: i64,
 	pub created: Option<i64>,
 	pub accessed: Option<i64>,
+	pub live_object: Option<LiveObject>,
 	pub inode: Option<i64>,
 	pub mode: Option<i64>,
 	pub uid: Option<i64>,
@@ -191,6 +226,7 @@ struct Binding {
 	external_id: Arc<str>,
 	size: i64,
 	mtime: i64,
+	live_object: Option<LiveObject>,
 	inode: Option<i64>,
 }
 
@@ -248,6 +284,7 @@ impl Ledger {
 					external_id,
 					size,
 					mtime,
+					live_object: None,
 					inode,
 				},
 			);
@@ -275,6 +312,17 @@ impl Ledger {
 	/// The record at a path, if the source has seen it.
 	pub fn uuid_of(&self, external_id: &str) -> Option<Uuid> {
 		self.by_path.get(external_id).copied()
+	}
+
+	/// Live evidence for the bound name, or (on an arrival) its object number.
+	#[cfg(target_os = "macos")]
+	pub fn live_binding(&self, path: &str, arriving: Option<u64>) -> Option<(String, LiveObject)> {
+		let uuid = self
+			.by_path
+			.get(path)
+			.or_else(|| self.by_inode.get(&(arriving? as i64)))?;
+		let b = &self.bindings[uuid];
+		Some((b.external_id.to_string(), b.live_object?))
 	}
 
 	/// How many records are bound.
@@ -316,6 +364,7 @@ impl Ledger {
 				external_id: observation.external_id.as_str().into(),
 				size: observation.size,
 				mtime: observation.mtime,
+				live_object: observation.live_object,
 				inode: observation.inode,
 			},
 		);
@@ -357,16 +406,25 @@ impl Ledger {
 		observation: &Observation,
 	) -> Option<Resolution> {
 		let uuid = self.by_path.get(old_external_id).copied()?;
+		let old = &self.bindings[&uuid];
+		let edited = observation.live_object.is_some()
+			&& old.live_object == observation.live_object
+			&& (old.size != observation.size || old.mtime != observation.mtime);
 		self.bind(
 			uuid,
 			Binding {
 				external_id: observation.external_id.as_str().into(),
 				size: observation.size,
 				mtime: observation.mtime,
+				live_object: observation.live_object,
 				inode: observation.inode,
 			},
 		);
-		Some(Resolution::Moved(uuid))
+		Some(if edited {
+			Resolution::Changed(uuid)
+		} else {
+			Resolution::Moved(uuid)
+		})
 	}
 
 	/// Start a sweep: every binding is presumed gone until an observation

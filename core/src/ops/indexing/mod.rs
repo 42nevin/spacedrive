@@ -9,6 +9,8 @@
 //! location pipeline and its database entries are gone.
 
 pub mod action;
+#[cfg(target_os = "macos")]
+mod apfs_move;
 pub mod arena;
 pub mod change_detection;
 pub mod collections;

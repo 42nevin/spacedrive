@@ -51,6 +51,7 @@ async fn build_stores(manager: &SourceManager, stores: usize, records: usize) {
 				mtime: 1_700_000_000_000,
 				created: None,
 				accessed: None,
+				live_object: None,
 				inode: None,
 				mode: Some(0o644),
 				uid: None,

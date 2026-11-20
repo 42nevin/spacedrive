@@ -40,7 +40,7 @@ pub async fn apply_batch(
 	let store = context.volume_index().store_for(root_path).await;
 	let event_bus = context.events.clone();
 
-	let mut writer = ArenaWriter::new(index, event_bus, store);
+	let mut writer = ArenaWriter::new(index, event_bus, store.clone());
 
 	let config = ChangeConfig {
 		rule_toggles,
@@ -48,6 +48,18 @@ pub async fn apply_batch(
 		volume_backend: None,
 	};
 
+	#[cfg(target_os = "macos")]
+	let events = if let Some(store) = &store {
+		let mut pending = Vec::new();
+		for event in events {
+			if !super::apfs_move::account(context, &writer, store, &event, rule_toggles).await? {
+				pending.push(event);
+			}
+		}
+		pending
+	} else {
+		events
+	};
 	change_detection::apply_batch(&mut writer, events, &config).await
 }
 

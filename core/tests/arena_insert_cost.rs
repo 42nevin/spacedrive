@@ -34,6 +34,7 @@ fn inserts_do_not_rebuild_the_file_type_registry() {
 			modified: Some(SystemTime::UNIX_EPOCH),
 			accessed: None,
 			created: None,
+			live_object: None,
 			inode: None,
 			permissions: None,
 			uid: None,

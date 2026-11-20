@@ -40,6 +40,7 @@ fn observe(path: &str, size: i64, mtime: i64, inode: Option<i64>) -> Observation
 		mtime,
 		created: None,
 		accessed: None,
+		live_object: None,
 		inode,
 		mode: Some(0o644),
 		uid: None,

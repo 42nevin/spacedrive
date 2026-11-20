@@ -140,6 +140,7 @@ pub struct RawDirEntry {
 	pub modified: Option<SystemTime>,
 	pub created: Option<SystemTime>,
 	pub accessed: Option<SystemTime>,
+	pub live_object: Option<sd_store::LiveObject>,
 	pub inode: Option<u64>,
 	/// Unix permission bits (mode), None for cloud backends or Windows
 	pub permissions: Option<u32>,
@@ -158,6 +159,7 @@ pub struct RawMetadata {
 	pub modified: Option<SystemTime>,
 	pub created: Option<SystemTime>,
 	pub accessed: Option<SystemTime>,
+	pub live_object: Option<sd_store::LiveObject>,
 	pub inode: Option<u64>,
 	/// Unix permission bits (mode), None for cloud backends or Windows
 	pub permissions: Option<u32>,

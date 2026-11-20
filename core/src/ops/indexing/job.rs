@@ -679,6 +679,7 @@ impl IndexerJob {
 				modified: metadata.modified().ok(),
 				created: crate::ops::indexing::metadata::birth_time(&path, &metadata),
 				accessed: metadata.accessed().ok(),
+				live_object: sd_store::LiveObject::from_metadata(&metadata),
 				inode: crate::ops::indexing::metadata::get_inode(&path, &metadata),
 				permissions,
 				uid,

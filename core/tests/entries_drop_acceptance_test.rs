@@ -1101,6 +1101,7 @@ fn observed(
 		modified: metadata.modified().ok(),
 		accessed: None,
 		created: None,
+		live_object: None,
 		inode: None,
 		permissions: None,
 		uid: None,
